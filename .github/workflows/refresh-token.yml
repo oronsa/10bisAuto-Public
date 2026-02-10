@@ -1,8 +1,7 @@
-name: Refresh Token
-
 on:
   schedule:
-    - cron: "0,25,50 * * * *"  # Every 25 minutes
+    # Refresh tokens every 25 minutes (at 0, 25, 50 minutes past each hour)
+    - cron: "0,25,50 * * * *"
   workflow_dispatch:
 
 concurrency:
