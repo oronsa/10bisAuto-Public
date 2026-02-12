@@ -1,9 +1,9 @@
 name: Refresh Token
 on:
-  schedule:
+ # schedule:
     # Run every 8 minutes to compensate for GitHub Actions cron delays/skips.
     # Token expires after 30 min — frequent runs ensure refresh happens in time.
-    - cron: "*/10 * * * *"
+  #  - cron: "*/10 * * * *"
   workflow_dispatch:
 
 concurrency:
