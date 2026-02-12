@@ -2,9 +2,8 @@ name: Refresh Token
 on:
   schedule:
     # Run every 8 minutes to compensate for GitHub Actions cron delays/skips.
-    # GitHub routinely delays scheduled runs by 5-30+ min, so scheduling
-    # frequently ensures ~2-3 actual runs per hour (~every 20-30 min).
-    - cron: "*/10 * * * *"
+    # Token expires after 30 min — frequent runs ensure refresh happens in time.
+    - cron: "*/8 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -52,11 +51,15 @@ jobs:
           MONEYCARD_ID: ${{ secrets.MONEYCARD_ID }}
         run: |
           set -euo pipefail
-          out="$(node github-refresh-token.js || true)"
-          if [ -z "$out" ]; then
+          out="$(node github-refresh-token.js 2>&1 || true)"
+          echo "Script output: $out"
+
+          if [ -z "$out" ] || ! jq -e . <<<"$out" >/dev/null 2>&1; then
+            echo "No valid JSON output — skipping token update"
             echo "tokens_updated=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
           tokens_updated=$(jq -r '.tokensUpdated // false' <<<"$out")
           access=$(jq -r '.accessToken // empty' <<<"$out")
           refresh=$(jq -r '.refreshToken // empty' <<<"$out")
@@ -70,6 +73,7 @@ jobs:
             echo "::add-mask::$refresh"
             echo "refresh_token=$refresh" >> "$GITHUB_OUTPUT"
           fi
+
       - name: Update ACCESS_TOKEN
         if: steps.refresh.outputs.tokens_updated == 'true' && steps.refresh.outputs.access_token != ''
         env:
