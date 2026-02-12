@@ -70,19 +70,14 @@ jobs:
             echo "::add-mask::$refresh"
             echo "refresh_token=$refresh" >> "$GITHUB_OUTPUT"
           fi
-
       - name: Update ACCESS_TOKEN
         if: steps.refresh.outputs.tokens_updated == 'true' && steps.refresh.outputs.access_token != ''
-        uses: peter-evans/create-or-update-secret@v4
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          secret-name: ACCESS_TOKEN
-          secret-value: ${{ steps.refresh.outputs.access_token }}
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: gh secret set ACCESS_TOKEN --body "${{ steps.refresh.outputs.access_token }}"
 
       - name: Update REFRESH_TOKEN
         if: steps.refresh.outputs.tokens_updated == 'true' && steps.refresh.outputs.refresh_token != ''
-        uses: peter-evans/create-or-update-secret@v4
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          secret-name: REFRESH_TOKEN
-          secret-value: ${{ steps.refresh.outputs.refresh_token }}
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: gh secret set REFRESH_TOKEN --body "${{ steps.refresh.outputs.refresh_token }}"
